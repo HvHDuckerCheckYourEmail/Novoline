@@ -337,8 +337,6 @@ do
         Callback = function(val)
             Enabled = val
             if Enabled then
-                array.Add("Flight", "Infinite")
-                enabled("Flight.Infinite", 2)
                 safeornot = math.random(1, 7)
                 local origy = lplr.Character.HumanoidRootPart.Position.y
                 part = Instance.new("Part", workspace)
@@ -374,8 +372,6 @@ do
                     heighttext = FlyHeight.Text
                 until not Enabled and InfFly.Enabled == true and FlyRender.Visible == true
             else
-                array.Remove("Flight")
-                disabled("Flight.Infinite", 2)
                 info("InfiniteFly - Waiting to return to original pos", 2)
                 repeat task.wait()
                     heighttext = tonumber(FlyHeight.Text)

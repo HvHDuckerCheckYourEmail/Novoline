@@ -269,49 +269,157 @@ local NoFall = Combat:CreateToggle({
 end
 
 do
-local HitRemote = Client:Get(bedwars["SwordRemote"])--["instance"]
-local Distance = {["Value"] = 18
-local Enabled = false
-local Aura = Combat:CreateToggle({
-    Name = "Aura",
-    Flag = "Aura",
-    Callback = function(val)
-        Enabled = val
-        if Enabled then
-             spawn(function()
-                    repeat
-                        task.wait(0.12)
-                        local nearest = getnearestplayer(Distance["Value"])
-                        if nearest ~= nil and nearest.Team ~= lplr.Team and isalive(nearest) and nearest.Character:FindFirstChild("Humanoid").Health > 0.1 and isalive(lplr) and lplr.Character:FindFirstChild("Humanoid").Health > 0.1 and not nearest.Character:FindFirstChild("ForceField") then
-                            local sword = getSword()
-                            spawn(function()
-                                local anim = Instance.new("Animation")
-                                anim.AnimationId = "rbxassetid://4947108314"
-                                local animator = lplr.Character:FindFirstChild("Humanoid"):FindFirstChild("Animator")
-                                animator:LoadAnimation(anim):Play()
-                                anim:Destroy()
-                                bedwars["ViewmodelController"]:playAnimation(15)
-                            end)
-                            if sword ~= nil then
-                                bedwars["SwordController"].lastAttack = game:GetService("Workspace"):GetServerTimeNow() - 0.11
-                                HitRemote:SendToServer({
-                                    ["weapon"] = sword.tool,
-                                    ["entityInstance"] = nearest.Character,
-                                    ["validate"] = {
-                                        ["raycast"] = {
-                                            ["cameraPosition"] = hashFunc(cam.CFrame.Position),
-                                            ["cursorDirection"] = hashFunc(Ray.new(cam.CFrame.Position, nearest.Character:FindFirstChild("HumanoidRootPart").Position).Unit.Direction)
-                                        },
-                                        ["targetPosition"] = hashFunc(nearest.Character:FindFirstChild("HumanoidRootPart").Position),
-                                        ["selfPosition"] = hashFunc(lplr.Character:FindFirstChild("HumanoidRootPart").Position + ((lplr.Character:FindFirstChild("HumanoidRootPart").Position - nearest.Character:FindFirstChild("HumanoidRootPart").Position).magnitude > 14 and (CFrame.lookAt(lplr.Character:FindFirstChild("HumanoidRootPart").Position, nearest.Character:FindFirstChild("HumanoidRootPart").Position).LookVector * 4) or Vector3.new(0, 0, 0)))
-                                    },
-                                    ["chargedAttack"] = {["chargeRatio"] = 0.8}
-                                })
-                            end
-                        end
-                    until not Enabled
+    Blatant:CreateSection("InfFly")
+    -- Gui to Lua
+    -- Version: 3.2
+
+    -- Instances:
+
+    local InfFly = Instance.new("ScreenGui")
+    local FlyRender = Instance.new("Frame")
+    local FlyStat = Instance.new("TextLabel")
+    local FlyHeight = Instance.new("TextLabel")
+
+    --Properties:
+
+    InfFly.Name = "InfFly"
+    InfFly.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    InfFly.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    InfFly.ResetOnSpawn = false
+
+    FlyRender.Name = "FlyRender"
+    FlyRender.Parent = InfFly
+    FlyRender.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    FlyRender.BackgroundTransparency = 0.910
+    FlyRender.Position = UDim2.new(0.399138957, 0, 0.674563587, 0)
+    FlyRender.Size = UDim2.new(0, 335, 0, 90)
+
+    FlyStat.Name = "FlyStat"
+    FlyStat.Parent = FlyRender
+    FlyStat.Active = true
+    FlyStat.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    FlyStat.BackgroundTransparency = 1.000
+    FlyStat.Position = UDim2.new(0.195718661, 0, 0, 0)
+    FlyStat.Size = UDim2.new(0, 200, 0, 50)
+    FlyStat.Font = Enum.Font.FredokaOne
+    FlyStat.Text = "Status : Safe"
+    FlyStat.TextColor3 = Color3.fromRGB(33, 255, 107)
+    FlyStat.TextSize = 30.000
+
+    FlyHeight.Name = "FlyHeight"
+    FlyHeight.Parent = FlyRender
+    FlyHeight.Active = true
+    FlyHeight.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    FlyHeight.BackgroundTransparency = 1.000
+    FlyHeight.Position = UDim2.new(0.195718661, 0, 0.444444448, 0)
+    FlyHeight.Size = UDim2.new(0, 200, 0, 50)
+    FlyHeight.Font = Enum.Font.FredokaOne
+    FlyHeight.Text = "Y : 100"
+    FlyHeight.TextColor3 = Color3.fromRGB(255, 255, 255)
+    FlyHeight.TextSize = 30.000
+    InfFly.Enabled = false
+    FlyRender.Visible = false
+    FlyRender.Draggable = true
+
+
+    local Enabled = false
+    local heightval = 1
+    local heighttext = ""
+    local safeornot = 1
+    local char = lplr.Character
+    local KeybindINFFLYCheck = false;
+    local infflykeybind;
+    local hrp = lplr.Character:FindFirstChild("HumanoidRootPart")
+    local InfiniteFly = Blatant:CreateToggle({
+        Name = "InfiniteFly",
+        CurrentValue = false,
+        Flag = "InfFlytoggle",
+        Callback = function(val)
+            Enabled = val
+            if Enabled then
+                array.Add("Flight", "Infinite")
+                enabled("Flight.Infinite", 2)
+                safeornot = math.random(1, 7)
+                local origy = lplr.Character.HumanoidRootPart.Position.y
+                part = Instance.new("Part", workspace)
+                part.Size = Vector3.new(1,1,1)
+                part.Transparency = 1
+                part.Anchored = true
+                part.CanCollide = false
+                cam.CameraSubject = part
+                RunLoops:BindToHeartbeat("FunnyFlyPart", 1, function()
+                    local pos = lplr.Character.HumanoidRootPart.Position
+                    part.Position = Vector3.new(pos.x, origy, pos.z)
                 end)
+                local cf = lplr.Character.HumanoidRootPart.CFrame
+                lplr.Character.HumanoidRootPart.CFrame = CFrame.new(cf.x, 300000, cf.z)
+                if lplr.Character.HumanoidRootPart.Position.X < 50000 then 
+                    lplr.Character.HumanoidRootPart.CFrame *= CFrame.new(0, 100000, 0)
+                end
+                InfFly.Enabled = true
+                FlyRender.Visible = true
+                if safeornot == 2 then
+                    FlyStat.Text = " " .. "UNSAFE!"
+                    FlyStat.TextColor3 = Color3.fromRGB(255, 32, 80)
+                else
+                    if safeornot ~= 2 then
+                        FlyStat.Text = " " .. " SAFE!"
+                        FlyStat.TextColor3 = Color3.fromRGB(42, 255, 102)
+                    end
+                end
+                repeat
+                    heightval = heightval + 1
+                    FlyHeight.Text = heightval
+                    task.wait()
+                    heighttext = FlyHeight.Text
+                until not Enabled and InfFly.Enabled == true and FlyRender.Visible == true
+            else
+                array.Remove("Flight")
+                disabled("Flight.Infinite", 2)
+                info("InfiniteFly - Waiting to return to original pos", 2)
+                repeat task.wait()
+                    heighttext = tonumber(FlyHeight.Text)
+                    heighttext = heighttext - 1
+                    FlyHeight.Text = tostring(heighttext)
+                until heighttext == 0
+                heightval = 0
+                task.wait(0.1)
+                RunLoops:UnbindFromHeartbeat("FunnyFlyPart")
+                local pos = lplr.Character.HumanoidRootPart.Position
+                local rcparams = RaycastParams.new()
+                rcparams.FilterType = Enum.RaycastFilterType.Whitelist
+                rcparams.FilterDescendantsInstances = {workspace.Map}
+                rc = workspace:Raycast(Vector3.new(pos.x, 300, pos.z), Vector3.new(0,-1000,0), rcparams)
+                if rc and rc.Position then
+                    lplr.Character.HumanoidRootPart.CFrame = CFrame.new(rc.Position) * CFrame.new(0,3,0)
+                end
+                cam.CameraSubject = lplr.Character
+                part:Destroy()
+                RunLoops:BindToHeartbeat("FunnyFlyVeloEnd", 1, function()
+                    lplr.Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+                    lplr.Character.HumanoidRootPart.CFrame = CFrame.new(rc.Position) * CFrame.new(0,3,0)
+                end)
+                RunLoops:UnbindFromHeartbeat("FunnyFlyVeloEnd")
+                InfFly.Enabled = false
+                FlyRender.Visible = false
             end
         end
+    })
+    local ifkeybind = Blatant:CreateKeybind({
+        Name = "InfFlight Keybind",
+        CurrentKeybind = "B",
+        HoldToInteract = false,
+        Flag = "InfFlighttogglekeybind", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+        Callback = function(Keybind)
+            if KeybindINFFLYCheck == true then
+                KeybindINFFLYCheck = false
+                InfiniteFly:Set(enabled)
+            else
+                if KeybindINFFLYCheck == false then
+                    KeybindINFFLYCheck = true
+                    InfiniteFly:Set(not enabled)
+                end
+            end
+        end,
     })
 end
